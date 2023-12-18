@@ -1,11 +1,3 @@
-var mouseX = 0;
-var mouseY = 0;
-const buttonWidth = 150;
-const buttonHeight = 50;
-var zombiesMaxHealth = 250;
-var zombiesMinHealth = 30;
-let upgradeCost = 100;
-
 class Player {
     constructor() {
         this.x = 50;
@@ -15,7 +7,7 @@ class Player {
         this.health = 200;
         this.score = 0;
         this.pistol = new Pistol(this);
-        this.shootSpeed = 8;
+        this.shootSpeed = 10;
         this.shootTime = this.shootSpeed;
         this.bulletDamage = 30;
     }
@@ -176,12 +168,44 @@ class Zombie {
     }
 }
 
+var mouseX = 0;
+var mouseY = 0;
+const buttonWidth = 150;
+const buttonHeight = 50;
+var zombiesMaxHealth = 250;
+var zombiesMinHealth = 30;
+let upgradeCost = 100;
+let zombieStatsUpdateTimer = 15000;
+const zombieStatsUpdateInterval = 15000; //15s
+const zombieHealthIncrease = 10;
+const zombieSpeedIncrease = 0.1;
+
+
+let zombieGenTimer = 0;
+let minZombieTimer = 20;
+let maxZombieTimer = 80;
+let lastTime = 0;
+
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
+const gameCanvas = document.getElementById("gameCanvas");
+const restartBtn = document.getElementById("restartButton");
+const gameBtns = document.getElementById("gameButtons");
+const upgradeCostText = document.getElementById("upgradeCostText");
+
+const player = new Player();
+
+let nextSpawnTime = 100;
+
+const zombies = [];
+const bullets = [];
+
 function upgradeRateOfFire(){
     if(player.score > upgradeCost)
     {
         player.shootSpeed -= 0.25;
         player.score -= upgradeCost;
-        upgradeCost += 50;
+        upgradeCost += 40;
     }
 }
 
@@ -190,7 +214,7 @@ function upgradeDamage(){
     {
         player.bulletDamage += 5;
         player.score -= upgradeCost;
-        upgradeCost += 60;
+        upgradeCost += 80;
     }
 }
 
@@ -220,16 +244,6 @@ function drawCharacter(character) {
     character.update();
     character.draw();
 }
-
-const canvas = document.getElementById("gameCanvas");
-const ctx = canvas.getContext("2d");
-
-const player = new Player();
-
-let nextSpawnTime = 100;
-
-const zombies = [];
-const bullets = [];
 
 function generateZombies() {
     zombies.push(new Zombie());
@@ -306,21 +320,23 @@ function restartGame() {
     document.getElementById("gameCanvas").style.display = "block";
 }
 
-let zombieGenTimer = 0;
-const minZombieTimer = 20;
-const maxZombieTimer = 80;
-
-const gameCanvas = document.getElementById("gameCanvas");
-const restartBtn = document.getElementById("restartButton");
-const gameBtns = document.getElementById("gameButtons");
-
-let lastTime = 0;
-
 function gameLoop(timestamp) {
     const deltaTime = (timestamp - lastTime) / 15; // Convierte a segundos
     lastTime = timestamp;
-
+    upgradeCostText.innerText = upgradeCost;
     zombieGenTimer -= deltaTime;
+    zombieStatsUpdateTimer -= deltaTime;
+
+    if (zombieStatsUpdateTimer < 0) {
+        zombieStatsUpdateTimer = zombieStatsUpdateInterval;
+
+        zombiesMaxHealth += zombieHealthIncrease;
+        zombiesMinHealth += zombieHealthIncrease;
+        zombies.forEach((zombie) => {
+            zombie.speed += zombieSpeedIncrease;
+        });
+    }
+
     if (zombieGenTimer < 0) {
         generateZombies();
         zombieGenTimer = Math.random() * (maxZombieTimer - minZombieTimer) + minZombieTimer;
