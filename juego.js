@@ -266,7 +266,13 @@ function restartGame() {
     document.getElementById("gameCanvas").style.display = "block";
 }
 
-zombieGenTimer = 0;
+let zombieGenTimer = 0;
+const minZombieTimer = 20;
+const maxZombieTimer = 80;
+
+
+const gameCanvas = document.getElementById("gameCanvas");
+const restartBtn = document.getElementById("restartButton");
 
 function gameLoop() {
     console.log(zombieGenTimer);
@@ -274,17 +280,17 @@ function gameLoop() {
     if(zombieGenTimer < 0)
     {
         generateZombies();
-        zombieGenTimer = Math.floor(Math.random() * (125 - 25) + 25);
+        zombieGenTimer = Math.floor(Math.random() * (maxZombieTimer - minZombieTimer) + minZombieTimer);
     }
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     // Si la vida del jugador llega a 0, muestra el botón "Restart"
     if (player.health <= 0) {
-        document.getElementById("restartButton").style.display = "block";
-        document.getElementById("gameCanvas").style.display = "none";
+        restartBtn.style.display = "block";
+        gameCanvas.style.display = "none";
     }
     else {
-        document.querySelector("button").style.display = "none";
+        restartBtn.style.display = "none";
 
 
         // Actualizamos y dibujamos a los zombies existentes
