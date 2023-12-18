@@ -174,7 +174,7 @@ const buttonWidth = 150;
 const buttonHeight = 50;
 var zombiesMaxHealth = 250;
 var zombiesMinHealth = 30;
-let upgradeCost = 100;
+let upgradeCost = 50;
 let zombieStatsUpdateTimer = 15000;
 const zombieStatsUpdateInterval = 15000; //15s
 const zombieHealthIncrease = 10;
@@ -214,7 +214,7 @@ function upgradeDamage(){
     {
         player.bulletDamage += 5;
         player.score -= upgradeCost;
-        upgradeCost += 80;
+        upgradeCost += 70;
     }
 }
 
@@ -223,14 +223,14 @@ function upgradeMoveSpeed(){
     {
         player.speed += 0.15;
         player.score -= upgradeCost;
-        upgradeCost += 35;
+        upgradeCost += 30;
     }
 }
 
 function healPlayer(){
     if(player.score > upgradeCost / 5 && player.health <= 190)
     {
-        player.health += 10;
+        player.health += 15;
         player.score -= upgradeCost / 5;
         upgradeCost += 5;
     }
@@ -335,6 +335,9 @@ function gameLoop(timestamp) {
         zombies.forEach((zombie) => {
             zombie.speed += zombieSpeedIncrease;
         });
+
+        if (maxZombieTimer > 55)
+            maxZombieTimer -= 2;
     }
 
     if (zombieGenTimer < 0) {
