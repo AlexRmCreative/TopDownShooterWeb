@@ -18,9 +18,20 @@
             <div class="col-12">
                 <h2>Puntuacion: <span id="puntuacion">0</span></h2>
             </div>
-            <div class="d-none d-md-block col-12">
-                <canvas id="gameCanvas" width="425" height="425"></canvas>
-                <button id="restartButton" onclick="restartGame()" >Restart</button>
+            <!-- Game -->
+            <div id="gameContainer">
+                <div id="game" class="d-none d-md-block col-12">
+                    <canvas id="gameCanvas" width="400" height="400"></canvas>
+                    <button id="restartButton" onclick="restartGame()">Restart</button>
+                </div>
+                <!-- Game buttons -->
+                <div class="d-none d-md-block col-12">
+                    <h2>Press button or key:</h2>
+                    <div class="col-6">
+                        Q / 1
+                        <button class="btn btn-light text-dark">Botas</button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

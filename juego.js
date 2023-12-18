@@ -44,25 +44,25 @@ class Player {
         this.pistol.draw();
     }
 
-    update() {
+    update(deltaTime) {
         if (this.moveUp && this.y > 0) {
-            this.y -= this.speed;
+            this.y -= this.speed * deltaTime;
         }
 
         if (this.moveDown && this.y + this.size < canvas.height) {
-            this.y += this.speed;
+            this.y += this.speed * deltaTime;
         }
 
         if (this.moveLeft && this.x > 0) {
-            this.x -= this.speed;
+            this.x -= this.speed * deltaTime;
         }
 
         if (this.moveRight && this.x + this.size < canvas.width) {
-            this.x += this.speed;
+            this.x += this.speed * deltaTime;
         }
 
         this.pistol.update();
-        this.shootTime--;
+        this.shootTime -= deltaTime;
         if (this.shootTime > 0)
             this.isShooting = false;
         else {
@@ -123,10 +123,10 @@ class Bullet {
         this.damage = damage; // Nuevo parámetro para el daño de la bala
     }
 
-    update() {
+    update(deltaTime) {
         // Actualiza la posición de la bala en función de su velocidad y dirección
-        this.x += Math.cos(this.angle) * this.speed;
-        this.y += Math.sin(this.angle) * this.speed;
+        this.x += Math.cos(this.angle) * this.speed * deltaTime;
+        this.y += Math.sin(this.angle) * this.speed * deltaTime;
     }
 
     draw() {
@@ -151,10 +151,10 @@ class Zombie {
         ctx.fillRect(this.x, this.y, this.size, this.size);
     }
 
-    update() {
+    update(deltaTime) {
         const angle = Math.atan2(player.y - this.y, player.x - this.x);
-        this.x += Math.cos(angle) * this.speed;
-        this.y += Math.sin(angle) * this.speed;
+        this.x += Math.cos(angle) * this.speed * deltaTime;
+        this.y += Math.sin(angle) * this.speed * deltaTime;
 
         if (
             this.x < player.x + player.size &&
@@ -190,10 +190,9 @@ function generateZombies() {
     zombies.push(new Zombie());
 }
 
-
-function updateBullets() {
+function updateBullets(deltaTime) {
     for (let i = bullets.length - 1; i >= 0; i--) {
-        bullets[i].update();
+        bullets[i].update(deltaTime);
 
         // Elimina la bala si sale del canvas
         if (bulletOutOfBounds(bullets[i])) {
@@ -270,17 +269,21 @@ let zombieGenTimer = 0;
 const minZombieTimer = 20;
 const maxZombieTimer = 80;
 
-
 const gameCanvas = document.getElementById("gameCanvas");
 const restartBtn = document.getElementById("restartButton");
 
-function gameLoop() {
-    console.log(zombieGenTimer);
-    zombieGenTimer--;
+let lastTime = 0;
+
+function gameLoop(timestamp) {
+    const deltaTime = (timestamp - lastTime) / 15; // Convierte a segundos
+    lastTime = timestamp;
+
+
+    zombieGenTimer -= deltaTime;
     if(zombieGenTimer < 0)
     {
         generateZombies();
-        zombieGenTimer = Math.floor(Math.random() * (maxZombieTimer - minZombieTimer) + minZombieTimer);
+        zombieGenTimer = Math.random() * (maxZombieTimer - minZombieTimer) + minZombieTimer;
     }
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -292,21 +295,21 @@ function gameLoop() {
     else {
         restartBtn.style.display = "none";
 
-
         // Actualizamos y dibujamos a los zombies existentes
         zombies.forEach((zombie) => {
-            zombie.update();
+            zombie.update(deltaTime);
             zombie.draw();
         });
 
-        player.update();
+        player.update(deltaTime);
         player.draw();
-        updateBullets();
+        updateBullets(deltaTime);
         drawBullets();
     }
 
     requestAnimationFrame(gameLoop);
 }
+
 // Función para manejar las teclas presionadas
 function handleKeyPress(e) {
     // W o Arriba
@@ -359,7 +362,6 @@ window.addEventListener("keydown", handleKeyPress);
 // Manejamos la liberación de teclas
 window.addEventListener("keyup", handleKeyRelease);
 
-
 function handleMouseMove(event) {
     mouseX = event.clientX - canvas.getBoundingClientRect().left;
     mouseY = event.clientY - canvas.getBoundingClientRect().top;
@@ -381,4 +383,4 @@ function handleMouseMove(event) {
 // Manejamos eventos del ratón
 canvas.addEventListener("mousemove", handleMouseMove);
 // Iniciamos el bucle del juego
-gameLoop();
+requestAnimationFrame(gameLoop);
