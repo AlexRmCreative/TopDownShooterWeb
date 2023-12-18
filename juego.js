@@ -2,6 +2,9 @@ var mouseX = 0;
 var mouseY = 0;
 const buttonWidth = 150;
 const buttonHeight = 50;
+var zombiesMaxHealth = 250;
+var zombiesMinHealth = 30;
+let upgradeCost = 100;
 
 class Player {
     constructor() {
@@ -10,7 +13,7 @@ class Player {
         this.size = 20;
         this.speed = 2.15;
         this.health = 200;
-        this.coins = 0;
+        this.score = 0;
         this.pistol = new Pistol(this);
         this.shootSpeed = 8;
         this.shootTime = this.shootSpeed;
@@ -38,7 +41,6 @@ class Player {
         // Dibuja el texto de las monedas
         ctx.fillStyle = "#f39c12";
         ctx.font = "16px Arial";
-        ctx.fillText(`Monedas: ${this.coins}`, canvas.width - 100, 20);
 
         // Dibuja la pistola
         this.pistol.draw();
@@ -124,7 +126,6 @@ class Bullet {
     }
 
     update(deltaTime) {
-        // Actualiza la posición de la bala en función de su velocidad y dirección
         this.x += Math.cos(this.angle) * this.speed * deltaTime;
         this.y += Math.sin(this.angle) * this.speed * deltaTime;
     }
@@ -140,16 +141,19 @@ class Zombie {
     constructor() {
         this.size = 20;
         this.speed = 1.4;
-        this.health = Math.floor(Math.random() * (225 - 30) + 30)
+        this.health = Math.floor(Math.random() * (zombiesMaxHealth - zombiesMinHealth) + zombiesMinHealth)
         this.damage = 1;
         this.x = Math.random() * canvas.width;
         this.y = Math.random() < 0.5 ? 0 : canvas.height;
     }
 
     draw() {
-        ctx.fillStyle = `rgb(${255 - this.health}, 0, 0)`;
+        const healthPercentage = this.health / (zombiesMaxHealth - zombiesMinHealth);
+        const redComponent = Math.round(255 - 205 * healthPercentage); // Ajusta el factor según tus preferencias
+    
+        ctx.fillStyle = `rgb(${redComponent}, 0, 0)`;
         ctx.fillRect(this.x, this.y, this.size, this.size);
-    }
+    }    
 
     update(deltaTime) {
         const angle = Math.atan2(player.y - this.y, player.x - this.x);
@@ -167,8 +171,49 @@ class Zombie {
     }
 
     die() {
-        player.coins += 10;
+        player.score += 10;
+        updateScore(player.score);
     }
+}
+
+function upgradeRateOfFire(){
+    if(player.score > upgradeCost)
+    {
+        player.shootSpeed -= 0.25;
+        player.score -= upgradeCost;
+        upgradeCost += 50;
+    }
+}
+
+function upgradeDamage(){
+    if(player.score > upgradeCost)
+    {
+        player.bulletDamage += 5;
+        player.score -= upgradeCost;
+        upgradeCost += 60;
+    }
+}
+
+function upgradeMoveSpeed(){
+    if(player.score > upgradeCost)
+    {
+        player.speed += 0.15;
+        player.score -= upgradeCost;
+        upgradeCost += 35;
+    }
+}
+
+function healPlayer(){
+    if(player.score > upgradeCost / 5 && player.health <= 190)
+    {
+        player.health += 10;
+        player.score -= upgradeCost / 5;
+        upgradeCost += 5;
+    }
+}
+
+function updateScore(score) {
+    document.getElementById("puntuacion").innerText = score;
 }
 
 function drawCharacter(character) {
@@ -194,23 +239,18 @@ function updateBullets(deltaTime) {
     for (let i = bullets.length - 1; i >= 0; i--) {
         bullets[i].update(deltaTime);
 
-        // Elimina la bala si sale del canvas
         if (bulletOutOfBounds(bullets[i])) {
             bullets.splice(i, 1);
             continue;
         }
 
-        // Verifica la colisión con zombies
         for (let j = zombies.length - 1; j >= 0; j--) {
             if (bulletHitsZombie(bullets[i], zombies[j])) {
                 zombies[j].health -= bullets[i].damage;
-
-                // Elimina la bala
                 bullets.splice(i, 1);
 
-                // Elimina el zombie si su salud es igual o menor a 0
                 if (zombies[j].health <= 0) {
-                    zombies[j].die(); // Llama al método die() del zombie
+                    zombies[j].die();
                     zombies.splice(j, 1);
                 }
 
@@ -254,7 +294,7 @@ function restartGame() {
 
     // Restablece la salud y las monedas del jugador
     player.health = 200;
-    player.coins = 0;
+    player.score = 0;
 
     // Elimina todos los zombies
     zombies.length = 0;
@@ -262,6 +302,7 @@ function restartGame() {
     // Elimina todas las balas
     bullets.length = 0;
 
+    updateScore(player.score);
     document.getElementById("gameCanvas").style.display = "block";
 }
 
@@ -271,6 +312,7 @@ const maxZombieTimer = 80;
 
 const gameCanvas = document.getElementById("gameCanvas");
 const restartBtn = document.getElementById("restartButton");
+const gameBtns = document.getElementById("gameButtons");
 
 let lastTime = 0;
 
@@ -278,24 +320,22 @@ function gameLoop(timestamp) {
     const deltaTime = (timestamp - lastTime) / 15; // Convierte a segundos
     lastTime = timestamp;
 
-
     zombieGenTimer -= deltaTime;
-    if(zombieGenTimer < 0)
-    {
+    if (zombieGenTimer < 0) {
         generateZombies();
         zombieGenTimer = Math.random() * (maxZombieTimer - minZombieTimer) + minZombieTimer;
     }
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Si la vida del jugador llega a 0, muestra el botón "Restart"
     if (player.health <= 0) {
         restartBtn.style.display = "block";
         gameCanvas.style.display = "none";
-    }
+        gameBtns.style.display = "none";
+    } 
     else {
         restartBtn.style.display = "none";
+        gameBtns.style.display = "block";
 
-        // Actualizamos y dibujamos a los zombies existentes
         zombies.forEach((zombie) => {
             zombie.update(deltaTime);
             zombie.draw();
@@ -330,6 +370,19 @@ function handleKeyPress(e) {
     // D o Derecha
     if (e.key === "d" || e.key === "ArrowRight") {
         player.moveRight = true;
+    }
+
+    if(e.key === " " || e.key === "1") {
+        healPlayer();
+    }
+    if(e.key === "q" || e.key === "2") {
+        upgradeDamage();
+    }
+    if(e.key === "e" || e.key === "3") {
+        upgradeMoveSpeed();
+    }
+    if(e.key === "r" || e.key === "4") {
+        upgradeRateOfFire();
     }
 }
 

@@ -16,7 +16,7 @@
     <div class="container">
         <div class="row">
             <div class="col-12">
-                <h2>Puntuacion: <span id="puntuacion">0</span></h2>
+                <h2>Score: <span id="puntuacion">0</span></h2>
             </div>
             <!-- Game -->
             <div id="gameContainer">
@@ -25,17 +25,31 @@
                     <button id="restartButton" onclick="restartGame()">Restart</button>
                 </div>
                 <!-- Game buttons -->
-                <div class="d-none d-md-block col-12">
+                <div id="gameButtons" class="col-12">
                     <h2>Press button or key:</h2>
-                    <div class="col-6">
-                        Q / 1
-                        <button class="btn btn-light text-dark">Botas</button>
+                    <div class="row text-center">
+                        <div class="col-3">
+                            <h3>SPACE / 1 </h3>
+                            <button class="btn btn-success text-dark" onclick="healPlayer();">Heal</button>
+                        </div>
+                        <div class="col-3">
+                            <h3>Q / 2</h3>
+                            <button class="btn btn-light text-dark" onclick="upgradeDamage();">Damage</button>
+                        </div>
+                        <div class="col-3">
+                            <h3>E / 3</h3>
+                            <button class="btn btn-light text-dark" onclick="upgradeMoveSpeed();">Move speed</button>
+                        </div>
+                        <div class="col-3">
+                            <h3>R / 4</h3>
+                            <button class="btn btn-light text-dark" onclick="upgradeRateOfFire();">Rate of fire</button>    
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
     <script src="juego.js"></script>
 </body>
 
