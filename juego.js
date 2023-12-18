@@ -3,11 +3,11 @@ class Player {
         this.x = 50;
         this.y = 50;
         this.size = 20;
-        this.speed = 2.15;
+        this.speed = 2;
         this.health = 200;
         this.score = 0;
         this.pistol = new Pistol(this);
-        this.shootSpeed = 10;
+        this.shootSpeed = 12.25;
         this.shootTime = this.shootSpeed;
         this.bulletDamage = 30;
     }
@@ -168,17 +168,19 @@ class Zombie {
     }
 }
 
+let contador = 0;
+
 var mouseX = 0;
 var mouseY = 0;
 const buttonWidth = 150;
 const buttonHeight = 50;
 var zombiesMaxHealth = 250;
 var zombiesMinHealth = 30;
-let upgradeCost = 50;
-let zombieStatsUpdateTimer = 15000;
-const zombieStatsUpdateInterval = 15000; //15s
+let upgradeCost = 30;
+let zombieStatsUpdateTimer = 10000;
+const zombieStatsUpdateInterval = 10000; //10s
 const zombieHealthIncrease = 10;
-const zombieSpeedIncrease = 0.1;
+const zombieSpeedIncrease = 0.15;
 
 
 let zombieGenTimer = 0;
@@ -193,6 +195,8 @@ const restartBtn = document.getElementById("restartButton");
 const gameBtns = document.getElementById("gameButtons");
 const upgradeCostText = document.getElementById("upgradeCostText");
 
+let counterInterval = setInterval(updateCounter, 1000);
+
 const player = new Player();
 
 let nextSpawnTime = 100;
@@ -200,12 +204,26 @@ let nextSpawnTime = 100;
 const zombies = [];
 const bullets = [];
 
+function updateCounter() {
+    contador++;
+    const hours = Math.floor(contador / 3600);
+    const minutes = Math.floor((contador % 3600) / 60);
+    const seconds = contador % 60;
+
+    const formattedTime = `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
+    document.getElementById("contador").innerText = formattedTime;
+}
+
+function pad(number) {
+    return number < 10 ? "0" + number : number;
+}
+
 function upgradeRateOfFire(){
     if(player.score > upgradeCost)
     {
         player.shootSpeed -= 0.25;
         player.score -= upgradeCost;
-        upgradeCost += 40;
+        upgradeCost += 30;
     }
 }
 
@@ -214,23 +232,23 @@ function upgradeDamage(){
     {
         player.bulletDamage += 5;
         player.score -= upgradeCost;
-        upgradeCost += 70;
+        upgradeCost += 55;
     }
 }
 
 function upgradeMoveSpeed(){
     if(player.score > upgradeCost)
     {
-        player.speed += 0.15;
+        player.speed += 0.125;
         player.score -= upgradeCost;
-        upgradeCost += 30;
+        upgradeCost += 15;
     }
 }
 
 function healPlayer(){
     if(player.score > upgradeCost / 5 && player.health <= 190)
     {
-        player.health += 15;
+        player.health += 20;
         player.score -= upgradeCost / 5;
         upgradeCost += 5;
     }
@@ -318,6 +336,9 @@ function restartGame() {
 
     updateScore(player.score);
     document.getElementById("gameCanvas").style.display = "block";
+    contador = 0;
+    document.getElementById("contador").innerText = "00:00:00";
+    counterInterval = setInterval(updateCounter, 1000);
 }
 
 function gameLoop(timestamp) {
@@ -336,8 +357,8 @@ function gameLoop(timestamp) {
             zombie.speed += zombieSpeedIncrease;
         });
 
-        if (maxZombieTimer > 55)
-            maxZombieTimer -= 2;
+        if (maxZombieTimer > 45)
+            maxZombieTimer -= 5;
     }
 
     if (zombieGenTimer < 0) {
@@ -347,6 +368,7 @@ function gameLoop(timestamp) {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     if (player.health <= 0) {
+        clearInterval(counterInterval);
         restartBtn.style.display = "block";
         gameCanvas.style.display = "none";
         gameBtns.style.display = "none";

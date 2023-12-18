@@ -15,8 +15,11 @@
 <body>
     <div class="container">
         <div class="row">
-            <div class="col-12">
+            <div class="col-3">
                 <h2>Score: <span id="puntuacion">0</span> Points</h2>
+            </div>
+            <div class="col-3">
+                <p id="contador" class="d-inline h2 text-danger">00:00:00</p>
             </div>
             <!-- Game -->
             <div id="gameContainer">
@@ -35,7 +38,7 @@
                         </div>
                         <div class="col-3">
                             <h3>Q / 2</h3>
-                            <button class="btn btn-light text-dark" onclick="upgradeDamage();">Damage</button>
+                            <button class="btn btn-danger text-dark" onclick="upgradeDamage();">Damage</button>
                         </div>
                         <div class="col-3">
                             <h3>E / 3</h3>
@@ -43,7 +46,7 @@
                         </div>
                         <div class="col-3">
                             <h3>R / 4</h3>
-                            <button class="btn btn-light text-dark" onclick="upgradeRateOfFire();">Rate of fire</button>    
+                            <button class="btn btn-warning text-dark" onclick="upgradeRateOfFire();">Rate of fire</button>
                         </div>
                     </div>
                 </div>
