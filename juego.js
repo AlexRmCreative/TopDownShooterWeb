@@ -146,10 +146,11 @@ class Zombie {
         ctx.fillRect(this.x, this.y, this.size, this.size);
     }    
 
-    update() {
+    update(deltaTime) {
         const angle = Math.atan2(player.y - this.y, player.x - this.x);
-        this.x += Math.cos(angle) * this.speed;
-        this.y += Math.sin(angle) * this.speed;
+        this.x += Math.cos(angle) * this.speed * deltaTime;
+        this.y += Math.sin(angle) * this.speed * deltaTime;
+
         if (
             this.x < player.x + player.size &&
             this.x + this.size > player.x &&
@@ -173,6 +174,7 @@ const gameBtns = document.getElementById("gameButtons");
 const costText = document.getElementById("costText");
 const coinsText = document.getElementById("coins");
 
+let gameSpeed = 70;
 let lastTime = 0;
 let mouseX = 0;
 let mouseY = 0;
@@ -331,8 +333,10 @@ function bulletOutOfBounds(bullet) {
 }
 
 function gameLoop(timestamp) {
-    const deltaTime = (timestamp - lastTime) / 15;
+    // Calcula deltaTime basándote en el tiempo real
+    const deltaTime = (timestamp - lastTime) / 1000 * gameSpeed;  // Dividido por 1000 para convertir milisegundos a segundos
     lastTime = timestamp;
+
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     coinsText.innerText = coins;
     costText.innerText = "Cost: " + cost;
@@ -345,14 +349,14 @@ function gameLoop(timestamp) {
         drawBullets();
         updateBullets(deltaTime);
         requestAnimationFrame(gameLoop);
-    } 
-    else {
+    } else {
         restartBtn.style.display = "block";
         canvas.style.display = "none";
         costText.style.display = "none";
         gameBtns.style.display = "none";
     }
 }
+
 
 // Función para manejar las acciones del jugador
 function handleKeyPress(e) {
