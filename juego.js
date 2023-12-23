@@ -263,8 +263,8 @@ function drawCharacter(character, deltaTime) {
 
 function upgradeZombies() {
     zombieSpeed += 0.075;
-    zombiesHealth += 5;
-    zombiesValue += 5;
+    zombiesHealth += 10;
+    zombiesValue += 7.5;
     if(zombiesGenIntervalMax > 250 && (zombiesGenIntervalMax - 50) > zombiesGenIntervalMin)
         zombiesGenIntervalMax -= 50;
     if(zombiesGenIntervalMin > 100)
@@ -333,6 +333,8 @@ function bulletOutOfBounds(bullet) {
 }
 
 function gameLoop(timestamp) {
+    console.log("min: " + zombiesGenIntervalMin);
+    console.log("max: " + zombiesGenIntervalMax);
     // Calcula deltaTime basándote en el tiempo real
     const deltaTime = (timestamp - lastTime) / 1000 * gameSpeed;  // Dividido por 1000 para convertir milisegundos a segundos
     lastTime = timestamp;
@@ -454,8 +456,8 @@ function startGame()
     zombieSpeed = 0.6;
     zombiesHealth = 100;
     zombiesValue = 5;
-    zombiesGenIntervalMax = 2000;
-    zombiesGenIntervalMin = 250;
+    zombiesGenIntervalMax = 2100;
+    zombiesGenIntervalMin = 275;
     zombiesUpgInterval = 10000;
     
     if(player.health > 0)
