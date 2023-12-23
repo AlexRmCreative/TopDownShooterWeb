@@ -1,15 +1,14 @@
 class Player {
     constructor() {
-        this.x = 50;
-        this.y = 50;
+        this.x = 200;
+        this.y = 200;
         this.size = 20;
         this.speed = 2;
-        this.health = 200;
-        this.score = 0;
+        this.health = 350;
         this.pistol = new Pistol(this);
-        this.shootSpeed = 12.25;
+        this.shootSpeed = 25;
         this.shootTime = this.shootSpeed;
-        this.bulletDamage = 30;
+        this.bulletDamage = 40;
     }
 
     draw() {
@@ -130,28 +129,27 @@ class Bullet {
 }
 
 class Zombie {
-    constructor() {
+    constructor(speed, health, pointsValue = 10) {
         this.size = 20;
-        this.speed = 1.4;
-        this.health = Math.floor(Math.random() * (zombiesMaxHealth - zombiesMinHealth) + zombiesMinHealth)
+        this.speed = speed;
+        this.health = health;
+        this.maxHealth = this.health;
         this.damage = 1;
+        this.pointsValue = pointsValue;
         this.x = Math.random() * canvas.width;
         this.y = Math.random() < 0.5 ? 0 : canvas.height;
     }
 
     draw() {
-        const healthPercentage = this.health / (zombiesMaxHealth - zombiesMinHealth);
-        const redComponent = Math.round(255 - 205 * healthPercentage); // Ajusta el factor según tus preferencias
-    
-        ctx.fillStyle = `rgb(${redComponent}, 0, 0)`;
+        let percentHealth = (this.health / this.maxHealth) * 100;
+        ctx.fillStyle = `rgb(${255 - percentHealth * 255 / 100}, 0, 0)`;
         ctx.fillRect(this.x, this.y, this.size, this.size);
     }    
 
-    update(deltaTime) {
+    update() {
         const angle = Math.atan2(player.y - this.y, player.x - this.x);
-        this.x += Math.cos(angle) * this.speed * deltaTime;
-        this.y += Math.sin(angle) * this.speed * deltaTime;
-
+        this.x += Math.cos(angle) * this.speed;
+        this.y += Math.sin(angle) * this.speed;
         if (
             this.x < player.x + player.size &&
             this.x + this.size > player.x &&
@@ -163,48 +161,42 @@ class Zombie {
     }
 
     die() {
-        player.score += 10;
-        updateScore(player.score);
+        updateScore(this.pointsValue);
     }
 }
-
-let contador = 0;
-
-var mouseX = 0;
-var mouseY = 0;
-const buttonWidth = 150;
-const buttonHeight = 50;
-var zombiesMaxHealth = 250;
-var zombiesMinHealth = 30;
-let upgradeCost = 30;
-let zombieStatsUpdateTimer = 10000;
-const zombieStatsUpdateInterval = 10000; //10s
-const zombieHealthIncrease = 10;
-const zombieSpeedIncrease = 0.15;
-
-
-let zombieGenTimer = 0;
-let minZombieTimer = 20;
-let maxZombieTimer = 80;
-let lastTime = 0;
 
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 const gameCanvas = document.getElementById("gameCanvas");
 const restartBtn = document.getElementById("restartButton");
 const gameBtns = document.getElementById("gameButtons");
-const upgradeCostText = document.getElementById("upgradeCostText");
+const costText = document.getElementById("costText");
+const coinsText = document.getElementById("coins");
 
-let counterInterval = setInterval(updateCounter, 1000);
+let lastTime = 0;
+let mouseX = 0;
+let mouseY = 0;
 
-const player = new Player();
+let contador;
+let coins;
+let cost;
 
-let nextSpawnTime = 100;
+let player = new Player();
 
-const zombies = [];
-const bullets = [];
+let zombieSpeed;
+let zombiesHealth;
+let zombiesValue;
+let zombiesGenIntervalMax;
+let zombiesGenIntervalMin;
+let zombiesUpgInterval;
+
+let zombies = [];
+let bullets = [];
 
 function updateCounter() {
+    function pad(number) {
+        return number < 10 ? "0" + number : number;
+    }
     contador++;
     const hours = Math.floor(contador / 3600);
     const minutes = Math.floor((contador % 3600) / 60);
@@ -212,59 +204,78 @@ function updateCounter() {
 
     const formattedTime = `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
     document.getElementById("contador").innerText = formattedTime;
-}
-
-function pad(number) {
-    return number < 10 ? "0" + number : number;
-}
-
-function upgradeRateOfFire(){
-    if(player.score > upgradeCost)
+    if(player.health > 0)
     {
-        player.shootSpeed -= 0.25;
-        player.score -= upgradeCost;
-        upgradeCost += 30;
+        requestAnimationFrame(updateCounter);
+    }
+}
+
+function updateScore(points) {
+    coins += points;
+}
+
+//Upgrades
+function upgradeRateOfFire(){
+    if(coins >= cost && player.shootSpeed > 0.1)
+    {
+        player.shootSpeed -= 1.5;
+        if(player.shootSpeed < 0.1)
+            player.shootSpeed = 0.1;
+        coins -= cost;
+        cost += 85;
     }
 }
 
 function upgradeDamage(){
-    if(player.score > upgradeCost)
+    if(coins >= cost)
     {
-        player.bulletDamage += 5;
-        player.score -= upgradeCost;
-        upgradeCost += 55;
+        player.bulletDamage += 15;
+        coins -= cost;
+        cost += 135;
     }
 }
 
 function upgradeMoveSpeed(){
-    if(player.score > upgradeCost)
+    if(coins >= cost)
     {
-        player.speed += 0.125;
-        player.score -= upgradeCost;
-        upgradeCost += 15;
+        player.speed += 0.35;
+        coins -= cost;
+        cost += 75;
     }
 }
 
 function healPlayer(){
-    if(player.score > upgradeCost / 5 && player.health <= 190)
+    if(coins >= cost / 5 && player.health + 30 <= 350)
     {
-        player.health += 20;
-        player.score -= upgradeCost / 5;
-        upgradeCost += 5;
+        player.health += 30;
+        coins -= cost / 5;
+        cost += 10;
     }
 }
+//
 
-function updateScore(score) {
-    document.getElementById("puntuacion").innerText = score;
-}
-
-function drawCharacter(character) {
-    character.update();
+function drawCharacter(character, deltaTime) {
+    character.update(deltaTime);
     character.draw();
 }
 
+function upgradeZombies() {
+    zombieSpeed += 0.075;
+    zombiesHealth += 5;
+    zombiesValue += 5;
+    if(zombiesGenIntervalMax > 250 && (zombiesGenIntervalMax - 50) > zombiesGenIntervalMin)
+        zombiesGenIntervalMax -= 50;
+    if(zombiesGenIntervalMin > 100)
+        zombiesGenIntervalMin -= 10;
+    setTimeout(() => { requestAnimationFrame(upgradeZombies); }, zombiesUpgInterval);
+}
+
 function generateZombies() {
-    zombies.push(new Zombie());
+    if(player.health > 0)
+    {
+        zombies.push(new Zombie(zombieSpeed, zombiesHealth, zombiesValue))
+    }
+    setTimeout(() => { requestAnimationFrame(generateZombies); }, Math.floor(Math.random() * (zombiesGenIntervalMax - zombiesGenIntervalMin + 1) + zombiesGenIntervalMin));
 }
 
 function updateBullets(deltaTime) {
@@ -319,115 +330,65 @@ function bulletOutOfBounds(bullet) {
     );
 }
 
-function restartGame() {
-    // Restablece la posición del jugador
-    player.x = 50;
-    player.y = 50;
-
-    // Restablece la salud y las monedas del jugador
-    player.health = 200;
-    player.score = 0;
-
-    // Elimina todos los zombies
-    zombies.length = 0;
-
-    // Elimina todas las balas
-    bullets.length = 0;
-
-    updateScore(player.score);
-    document.getElementById("gameCanvas").style.display = "block";
-    contador = 0;
-    document.getElementById("contador").innerText = "00:00:00";
-    counterInterval = setInterval(updateCounter, 1000);
-}
-
 function gameLoop(timestamp) {
-    const deltaTime = (timestamp - lastTime) / 15; // Convierte a segundos
+    const deltaTime = (timestamp - lastTime) / 15;
     lastTime = timestamp;
-    upgradeCostText.innerText = upgradeCost;
-    zombieGenTimer -= deltaTime;
-    zombieStatsUpdateTimer -= deltaTime;
-
-    if (zombieStatsUpdateTimer < 0) {
-        zombieStatsUpdateTimer = zombieStatsUpdateInterval;
-
-        zombiesMaxHealth += zombieHealthIncrease;
-        zombiesMinHealth += zombieHealthIncrease;
-        zombies.forEach((zombie) => {
-            zombie.speed += zombieSpeedIncrease;
-        });
-
-        if (maxZombieTimer > 45)
-            maxZombieTimer -= 5;
-    }
-
-    if (zombieGenTimer < 0) {
-        generateZombies();
-        zombieGenTimer = Math.random() * (maxZombieTimer - minZombieTimer) + minZombieTimer;
-    }
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    coinsText.innerText = coins;
+    costText.innerText = "Cost: " + cost;
 
-    if (player.health <= 0) {
-        clearInterval(counterInterval);
-        restartBtn.style.display = "block";
-        gameCanvas.style.display = "none";
-        gameBtns.style.display = "none";
+    if (player.health > 0) {
+        drawCharacter(player, deltaTime);
+        zombies.forEach((zombie) => {
+            drawCharacter(zombie, deltaTime);
+        });
+        drawBullets();
+        updateBullets(deltaTime);
+        requestAnimationFrame(gameLoop);
     } 
     else {
-        restartBtn.style.display = "none";
-        gameBtns.style.display = "block";
-
-        zombies.forEach((zombie) => {
-            zombie.update(deltaTime);
-            zombie.draw();
-        });
-
-        player.update(deltaTime);
-        player.draw();
-        updateBullets(deltaTime);
-        drawBullets();
+        restartBtn.style.display = "block";
+        canvas.style.display = "none";
+        costText.style.display = "none";
+        gameBtns.style.display = "none";
     }
-
-    requestAnimationFrame(gameLoop);
 }
 
-// Función para manejar las teclas presionadas
+// Función para manejar las acciones del jugador
 function handleKeyPress(e) {
-    // W o Arriba
-    if (e.key === "w" || e.key === "ArrowUp") {
-        player.moveUp = true;
-    }
-
-    // S o Abajo
-    if (e.key === "s" || e.key === "ArrowDown") {
-        player.moveDown = true;
-    }
-
-    // A o Izquierda
-    if (e.key === "a" || e.key === "ArrowLeft") {
-        player.moveLeft = true;
-    }
-
-    // D o Derecha
-    if (e.key === "d" || e.key === "ArrowRight") {
-        player.moveRight = true;
-    }
-
-    if(e.key === " " || e.key === "1") {
-        healPlayer();
-    }
-    if(e.key === "q" || e.key === "2") {
-        upgradeDamage();
-    }
-    if(e.key === "e" || e.key === "3") {
-        upgradeMoveSpeed();
-    }
-    if(e.key === "r" || e.key === "4") {
-        upgradeRateOfFire();
+    if(player.health > 0)
+    {
+        if (e.key === "w" || e.key === "ArrowUp") {
+            player.moveUp = true;
+        }
+    
+        if (e.key === "s" || e.key === "ArrowDown") {
+            player.moveDown = true;
+        }
+    
+        if (e.key === "a" || e.key === "ArrowLeft") {
+            player.moveLeft = true;
+        }
+    
+        if (e.key === "d" || e.key === "ArrowRight") {
+            player.moveRight = true;
+        }
+    
+        if(e.key === " " || e.key === "1") {
+            healPlayer();
+        }
+        if(e.key === "q" || e.key === "2") {
+            upgradeDamage();
+        }
+        if(e.key === "e" || e.key === "3") {
+            upgradeMoveSpeed();
+        }
+        if(e.key === "r" || e.key === "4") {
+            upgradeRateOfFire();
+        }
     }
 }
 
-// Función para manejar las teclas liberadas
 function handleKeyRelease(e) {
     // W o Arriba
     if (e.key === "w" || e.key === "ArrowUp") {
@@ -450,12 +411,6 @@ function handleKeyRelease(e) {
     }
 }
 
-// Manejamos las teclas presionadas
-window.addEventListener("keydown", handleKeyPress);
-
-// Manejamos la liberación de teclas
-window.addEventListener("keyup", handleKeyRelease);
-
 function handleMouseMove(event) {
     mouseX = event.clientX - canvas.getBoundingClientRect().left;
     mouseY = event.clientY - canvas.getBoundingClientRect().top;
@@ -474,7 +429,40 @@ function handleMouseMove(event) {
     }
 }
 
+// Manejamos las teclas presionadas
+window.addEventListener("keydown", handleKeyPress);
+// Manejamos la liberación de teclas
+window.addEventListener("keyup", handleKeyRelease);
 // Manejamos eventos del ratón
 canvas.addEventListener("mousemove", handleMouseMove);
-// Iniciamos el bucle del juego
-requestAnimationFrame(gameLoop);
+
+function startGame()
+{
+    restartBtn.style.display = "none";
+    canvas.style.display = "block";
+    gameBtns.style.display = "block";
+    costText.style.display = "block";
+    player = new Player();
+    contador = 0;
+    coins = 0;
+    lastTime = 0;
+    cost = 50;
+    zombieSpeed = 0.6;
+    zombiesHealth = 100;
+    zombiesValue = 5;
+    zombiesGenIntervalMax = 2000;
+    zombiesGenIntervalMin = 250;
+    zombiesUpgInterval = 10000;
+    
+    if(player.health > 0)
+    {
+        zombies = [];
+        bullets = [];
+        updateCounter();
+        upgradeZombies();
+        generateZombies();
+        gameLoop();
+    }
+}
+
+startGame();
